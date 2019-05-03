@@ -1,3 +1,5 @@
+from typing import Mapping, Optional
+
 import discord
 
 from lab import LabyrinthWalker, letters_reversed, ROAD, WALL
@@ -16,7 +18,8 @@ CLOSED_ICON = "\u26d4"
 
 
 class Labyrinth:
-    def __init__(self, lab: LabyrinthWalker, folder: discord.CategoryChannel, up, right, down, left, center):
+    def __init__(self, lab: LabyrinthWalker, folder: discord.CategoryChannel,
+                 previous_member_roles: Optional[Mapping], up, right, down, left, center):
         self.lab = lab
         self.folder = folder
         self.up = up
@@ -43,6 +46,7 @@ class Labyrinth:
             self.down: DOWN_ARROW,
             self.left: LEFT_ARROW
         }
+        self.previous_member_roles = previous_member_roles
 
     async def update_channels(self):
         for channel in self.channels:

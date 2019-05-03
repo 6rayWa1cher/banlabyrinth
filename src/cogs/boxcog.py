@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord.utils import find
 
+import dbmanager
 from cogs.roleregistrarcog import is_role_powered
 from src.utils import trap, untrap
 
@@ -31,7 +32,8 @@ class BoxCog(commands.Cog):
         channel = await ctx.guild.create_voice_channel(f"{str(member)}'s box", overwrites=overwrites,
                                                        reason="boxing")
         await member.move_to(channel)
-        await trap(member, {channel})
+        prev_member_roles = await trap(member, {channel})
+        dbmanager.push_box_member_roles(channel.id, prev_member_roles)
         self.boxes[member] = channel
         logger.info("created personal box for {0.name} from guild {1.id}".format(member, guild))
 
@@ -46,7 +48,8 @@ class BoxCog(commands.Cog):
                 return
         else:
             box = self.boxes[member]
-        await untrap(member, {box})
+        await untrap(member, dbmanager.get_box_member_roles(member.guild, box.id), {box})
+        dbmanager.delete_box_member_roles(box.id)
         await box.delete(reason="Unboxing")
         logger.info("unboxed {0.name} from guild {1.id}".format(member, member.guild))
 

@@ -54,12 +54,13 @@ class TrappedCog(commands.Cog):
             left = await folder.create_voice_channel(LEFT_ARROW, overwrites=overwrites)
             ls = gen_lab(lab_width, lab_height)
             lw = LabyrinthWalker(ls)
-            lab = Labyrinth(lw, folder, up, right, down, left, center)
+            lab = Labyrinth(lw, folder, None, up, right, down, left, center)
             try:
                 await member.move_to(center)
             except discord.errors.HTTPException:
                 pass
-            await trap(member, lab.channels)
+            previous_member_roles = await trap(member, lab.channels)
+            lab.previous_member_roles = previous_member_roles
             await lab.update_channels()
             self.channel_to_lab.update({i: lab for i in lab.channels})
             dbmanager.push_lab_to_db(lab)
@@ -73,14 +74,19 @@ class TrappedCog(commands.Cog):
         logger.info("pardoned {0.name} from guild {1.id}".format(member, member.guild))
 
     async def _pardon(self, member: discord.Member):
-        lab = find(lambda a: a.name == f"{str(member)}'s labyrinth", member.guild.categories)
-        await untrap(member, lab.channels)
-        for channel in lab.channels:
+        folder = find(lambda a: a.name == f"{str(member)}'s labyrinth", member.guild.categories)
+        some_channel = next(iter(folder.channels))
+        if some_channel in self.channel_to_lab:
+            lab = self.channel_to_lab[some_channel]
+            await untrap(member, lab.previous_member_roles, folder.channels)
+        else:
+            await untrap(member, dict(), folder.channels)
+        for channel in folder.channels:
             await channel.delete()
             if channel in self.channel_to_lab:
                 del self.channel_to_lab[channel]
-        dbmanager.delete_lab_from_db(lab.id)
-        await lab.delete()
+        dbmanager.delete_lab_from_db(folder.id)
+        await folder.delete()
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

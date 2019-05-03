@@ -10,20 +10,57 @@ from lab import LabyrinthWalker, LabyrinthSchema
 c = sqlite3.connect("../database.sqlite")
 
 
+def int_to_obj(a):
+    return None if a == -1 else bool(a)
+
+
+def obj_to_int(a):
+    return -1 if a is None else int(a)
+
+
 def setup():
     with c:
+        c.execute('PRAGMA foreign_keys = ON;')
         c.execute('''
         CREATE TABLE IF NOT EXISTS labyrinth (
             folder_id INTEGER NOT NULL PRIMARY KEY,
             guild_id INTEGER NOT NULL,
-            up_channel_id INTEGER NOT NULL UNIQUE,
-            right_channel_id INTEGER NOT NULL UNIQUE,
-            down_channel_id INTEGER NOT NULL UNIQUE,
-            left_channel_id INTEGER NOT NULL UNIQUE,
-            center_channel_id INTEGER NOT NULL UNIQUE,
+            up_channel_id INTEGER NOT NULL,
+            right_channel_id INTEGER NOT NULL,
+            down_channel_id INTEGER NOT NULL,
+            left_channel_id INTEGER NOT NULL,
+            center_channel_id INTEGER NOT NULL,
             lab_data TEXT NOT NULL
         )
         ''')
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS member_roles (
+            folder_id INTEGER NOT NULL,
+            channel_id INTEGER NOT NULL,
+            read_messages INTEGER,
+            connect INTEGER,
+            FOREIGN KEY (folder_id) REFERENCES labyrinth (folder_id) ON DELETE CASCADE,
+            PRIMARY KEY (folder_id, channel_id)
+        )
+        ''')
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS box_member_roles (
+            box_id INTEGER NOT NULL,
+            channel_id INTEGER NOT NULL,
+            read_messages INTEGER,
+            connect INTEGER,
+            PRIMARY KEY (box_id, channel_id)
+        )
+        ''')
+        c.commit()
+
+
+def push_box_member_roles(box_id, member_roles: dict):
+    with c:
+        c.executemany('''
+        INSERT INTO box_member_roles (box_id, channel_id, read_messages, connect) VALUES (?,?,?,?)
+        ''', ((box_id, i.id, obj_to_int(member_roles[i][0]), obj_to_int(member_roles[i][1])) for i in
+              member_roles.keys()))
         c.commit()
 
 
@@ -33,6 +70,11 @@ def push_lab_to_db(lab: Labyrinth):
         INSERT INTO labyrinth VALUES (?,?,?,?,?,?,?,?)
         ''', (lab.folder.id, lab.folder.guild.id, lab.up.id, lab.right.id, lab.down.id, lab.left.id, lab.center.id,
               repr(lab.lab)))
+        member_roles = lab.previous_member_roles
+        c.executemany('''
+        INSERT INTO member_roles (folder_id, channel_id, read_messages, connect) VALUES (?,?,?,?)
+        ''', ((lab.folder.id, i.id, obj_to_int(member_roles[i][0]), obj_to_int(member_roles[i][1])) for i in
+              member_roles.keys()))
         c.commit()
 
 
@@ -50,6 +92,42 @@ def delete_lab_from_db(folder_id: int):
         DELETE FROM labyrinth WHERE folder_id = ?
         ''', (folder_id,))
         c.commit()
+
+
+def delete_box_member_roles(box_id: int):
+    with c:
+        c.execute('''
+        DELETE FROM box_member_roles WHERE box_id = ?
+        ''', (box_id,))
+        c.commit()
+
+
+def get_member_roles(guild: discord.Guild, folder_id: int) -> dict:
+    with c:
+        cursor = c.execute('''
+        SELECT * FROM member_roles WHERE folder_id = ?
+        ''', (folder_id,))
+        previous_member_roles = dict()
+        for row in cursor.fetchall():
+            folder_id, channel_id, read_messages_int, connect_int = row
+            channel = guild.get_channel(channel_id)
+            if channel is not None:
+                previous_member_roles[channel] = (int_to_obj(read_messages_int), int_to_obj(connect_int))
+        return previous_member_roles
+
+
+def get_box_member_roles(guild: discord.Guild, box_id: int) -> dict:
+    with c:
+        cursor = c.execute('''
+        SELECT * FROM box_member_roles WHERE box_id = ?
+        ''', (box_id,))
+        previous_member_roles = dict()
+        for row in cursor.fetchall():
+            folder_id, channel_id, read_messages_int, connect_int = row
+            channel = guild.get_channel(channel_id)
+            if channel is not None:
+                previous_member_roles[channel] = (int_to_obj(read_messages_int), int_to_obj(connect_int))
+        return previous_member_roles
 
 
 def collect_data_from_db(bot: discord.ext.commands.Bot) -> dict:
@@ -75,6 +153,10 @@ def collect_data_from_db(bot: discord.ext.commands.Bot) -> dict:
                 continue
             folder = find(lambda a: a.id == folder_id, guild.categories)
             lab_walker = eval(lab_data)
-            lab = Labyrinth(lab_walker, folder, *channels)
+            lab = Labyrinth(lab_walker, folder, get_member_roles(guild, folder_id), *channels)
             channel_to_lab.update({i: lab for i in channels})
         return channel_to_lab
+
+
+if __name__ == '__main__':
+    setup()

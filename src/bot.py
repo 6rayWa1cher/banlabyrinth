@@ -5,6 +5,8 @@ import sys
 
 from discord.ext import commands
 
+import dbmanager
+
 CONFIG_PATH = "../config.ini"
 LOGS_PATH = "../logs/"
 
@@ -48,6 +50,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(CONFIG_PATH):
         create_config()
+    dbmanager.setup()
     token = get_token()
     bot = commands.Bot(command_prefix='#')
     bot.load_extension("cogs.roleregistrarcog")
