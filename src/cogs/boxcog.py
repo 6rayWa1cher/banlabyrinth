@@ -4,7 +4,8 @@ import discord
 from discord.ext import commands
 from discord.utils import find
 
-from src.utils import trap, untrap, check_role_existence, is_role_powered
+from cogs.roleregistrarcog import is_role_powered
+from src.utils import trap, untrap
 
 logger = logging.getLogger("banlab")
 
@@ -13,11 +14,6 @@ class BoxCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.boxes = dict()
-        self.role = None
-
-    async def bot_check_once(self, ctx):
-        self.role = await check_role_existence(ctx)
-        return True
 
     @commands.command()
     @commands.check(is_role_powered)

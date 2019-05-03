@@ -50,6 +50,7 @@ if __name__ == '__main__':
         create_config()
     token = get_token()
     bot = commands.Bot(command_prefix='#')
+    bot.load_extension("cogs.roleregistrarcog")
     bot.load_extension("cogs.boxcog")
     bot.load_extension("cogs.trappedcog")
     bot.run(token)

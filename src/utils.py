@@ -2,7 +2,6 @@ import logging
 from itertools import filterfalse
 
 import discord
-from discord.utils import find
 
 logger = logging.getLogger("banlab")
 
@@ -33,16 +32,3 @@ async def untrap(member, exclude=None):
                                                                                               channel, "None"))
         except discord.errors.Forbidden:
             pass
-
-
-def is_role_powered(ctx):
-    rl = find(lambda r: r.name == "Labyrinth Keeper", ctx.author.roles)
-    return rl is not None
-
-
-async def check_role_existence(ctx):
-    if "Labyrinth Keeper" not in map(lambda x: x.name, ctx.guild.roles):
-        print("creating role")
-        return await ctx.guild.create_role(name="Labyrinth Keeper", permissions=discord.Permissions.none())
-    else:
-        return next(x for x in ctx.guild.roles if x.name == "Labyrinth Keeper")
