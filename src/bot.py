@@ -36,7 +36,7 @@ def setup_logger():
     logger.addHandler(handler)
 
     logger = logging.getLogger('banlab')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     handler1 = logging.FileHandler(filename=LOGS_PATH + 'banlab.log', encoding='utf-8', mode='w')
     handler1.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     handler2 = logging.StreamHandler(stream=sys.stdout)
@@ -56,4 +56,5 @@ if __name__ == '__main__':
     bot.load_extension("cogs.roleregistrarcog")
     bot.load_extension("cogs.boxcog")
     bot.load_extension("cogs.trappedcog")
+    logging.getLogger('banlab').info("Connecting...")
     bot.run(token)

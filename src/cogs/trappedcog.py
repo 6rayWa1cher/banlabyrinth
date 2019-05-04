@@ -16,6 +16,9 @@ logger = logging.getLogger("banlab")
 
 
 class TrappedCog(commands.Cog):
+    """
+    Commands to put somebody in labyrinth.
+    """
     def __init__(self, bot):
         self.bot = bot
         self._size_re = re.compile(r"^\d{1,2}x\d{1,2}$")
@@ -24,11 +27,26 @@ class TrappedCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if self.channel_to_lab is None:
+            logger.info("Connected to Discord API!")
             self.channel_to_lab = dbmanager.collect_data_from_db(self.bot)
+            logger.info("Successfully decoded {} labyrinths from DB".format(len(self.channel_to_lab) // 5))
 
     @commands.command()
     @commands.check(is_role_powered)
     async def trap(self, ctx, member: discord.Member = None, size: str = "15x15"):
+        """
+        Creates a labyrinth for the member and locks him in it.
+        If member not provided, the effect will be on you!
+        Requires "Labyrinth Keeper" role to be executed.
+        By default creates labyrinth 15x15 (thin walls). You can set another size (not square, for example):
+        limits only 0 and 100 (both not inclusive) for both size.
+        Examples:
+        #trap "Bad guy"
+        #trap "Bad guy" 20x15
+        #trap BadGuy
+        #trap BadGuy 25x50
+        #trap BadGuy#1337
+        """
         member = member or ctx.author
         if member == ctx.guild.me:
             return
@@ -36,6 +54,8 @@ class TrappedCog(commands.Cog):
         if not self._size_re.fullmatch(size):
             return
         lab_width, lab_height = map(int, size.split("x"))
+        if lab_width < 0 or lab_height < 0:
+            return
         role = roleregistrarcog.get_role(self.bot, guild)
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False,
@@ -59,7 +79,7 @@ class TrappedCog(commands.Cog):
                 await member.move_to(center)
             except discord.errors.HTTPException:
                 pass
-            previous_member_roles = await trap(member, lab.channels)
+            previous_member_roles = await trap(member, guild, lab.channels)
             lab.previous_member_roles = previous_member_roles
             await lab.update_channels()
             self.channel_to_lab.update({i: lab for i in lab.channels})
@@ -70,17 +90,27 @@ class TrappedCog(commands.Cog):
     @commands.command()
     @commands.check(is_role_powered)
     async def pardon(self, ctx, *, member: discord.Member):
-        await self._pardon(member)
-        logger.info("pardoned {0.name} from guild {1.id}".format(member, member.guild))
+        """
+        Removes the labyrinth and restores member permissions.
+        Requires "Labyrinth Keeper" role to be executed.
+        Examples:
+        #unbox "Bad guy"
+        #unbox Bad guy
+        #unbox BadGuy
+        """
+        await self._pardon(member, ctx.guild)
+        logger.info("pardoned {0.name} from guild {1.id}".format(member, ctx.guild))
 
-    async def _pardon(self, member: discord.Member):
-        folder = find(lambda a: a.name == f"{str(member)}'s labyrinth", member.guild.categories)
+    async def _pardon(self, member: discord.Member, guild):
+        folder = find(lambda a: a.name == f"{str(member)}'s labyrinth", guild.categories)
+        if folder is None:
+            return
         some_channel = next(iter(folder.channels))
         if some_channel in self.channel_to_lab:
             lab = self.channel_to_lab[some_channel]
-            await untrap(member, lab.previous_member_roles, folder.channels)
+            await untrap(member, guild, lab.previous_member_roles, folder.channels)
         else:
-            await untrap(member, dict(), folder.channels)
+            await untrap(member, guild, dict(), folder.channels)
         for channel in folder.channels:
             await channel.delete()
             if channel in self.channel_to_lab:
@@ -92,16 +122,17 @@ class TrappedCog(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         before = before.channel
         after = after.channel
+        guild = member.guild
         if before not in self.channel_to_lab and after not in self.channel_to_lab:
             return
-        if after is None:
+        if after is None or (before is not None and before.guild != after.guild):
             return
         if before in self.channel_to_lab:
             lab = self.channel_to_lab[before]
         else:
             lab = self.channel_to_lab[after]
         if after not in self.channel_to_lab:
-            await self._pardon(member)
+            await self._pardon(member, guild)
             return
         if after == lab.center:
             return
@@ -113,9 +144,9 @@ class TrappedCog(commands.Cog):
         move_result = lab.lab.move_into(direction)
         pos_after = lab.lab.curr
         logger.debug(
-            "lab for {0.name} from guild {1.id}: {2} -> {3}".format(member, member.guild, pos_before, pos_after))
+            "lab for {0.name} from guild {1.id}: {2} -> {3}".format(member, guild, pos_before, pos_after))
         if lab.lab.is_win():
-            await self._pardon(member)
+            await self._pardon(member, guild)
         else:
             await member.move_to(lab.center)
             await lab.update_channels()
