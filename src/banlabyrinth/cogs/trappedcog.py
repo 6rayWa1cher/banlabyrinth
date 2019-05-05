@@ -5,12 +5,12 @@ import discord
 from discord.ext import commands
 from discord.utils import find
 
-import dbmanager
-from cogs import roleregistrarcog
-from cogs.roleregistrarcog import is_role_powered
-from entities.labyrinth import Labyrinth, UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, CENTER_ICON
-from src.lab import LabyrinthWalker, gen_lab
-from src.utils import trap, untrap
+from banlabyrinth import dbmanager
+from banlabyrinth.cogs import roleregistrarcog
+from banlabyrinth.cogs.roleregistrarcog import is_role_powered
+from banlabyrinth.entities.labyrinth import Labyrinth, UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, CENTER_ICON
+from banlabyrinth.lab import LabyrinthWalker, gen_lab
+from banlabyrinth.utils import trap, untrap
 
 logger = logging.getLogger("banlab")
 
@@ -19,6 +19,7 @@ class TrappedCog(commands.Cog):
     """
     Commands to put somebody in labyrinth.
     """
+
     def __init__(self, bot):
         self.bot = bot
         self._size_re = re.compile(r"^\d{1,2}x\d{1,2}$")

@@ -4,9 +4,9 @@ import discord
 from discord.ext import commands
 from discord.utils import find
 
-import dbmanager
-from cogs.roleregistrarcog import is_role_powered
-from src.utils import trap, untrap
+from banlabyrinth import dbmanager
+from banlabyrinth.cogs.roleregistrarcog import is_role_powered
+from banlabyrinth.utils import trap, untrap
 
 logger = logging.getLogger("banlab")
 
@@ -15,6 +15,7 @@ class BoxCog(commands.Cog):
     """
     Commands to put somebody in very personal box.
     """
+
     def __init__(self, bot):
         self.bot = bot
         self.boxes = dict()

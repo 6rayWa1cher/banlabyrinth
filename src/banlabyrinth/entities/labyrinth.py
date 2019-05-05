@@ -2,7 +2,7 @@ from typing import Mapping, Optional
 
 import discord
 
-from lab import LabyrinthWalker, letters_reversed, ROAD, WALL
+from banlabyrinth.lab import LabyrinthWalker, letters_reversed, ROAD, WALL
 
 CENTER_ICON = "\u2718"
 

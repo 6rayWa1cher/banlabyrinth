@@ -3,11 +3,13 @@ import sqlite3
 import discord.ext.commands
 from discord.utils import find
 
-from entities.labyrinth import Labyrinth
+from banlabyrinth import configmanager
+from banlabyrinth.entities.labyrinth import Labyrinth
 # noinspection PyUnresolvedReferences
-from lab import LabyrinthWalker, LabyrinthSchema
+from banlabyrinth.lab import LabyrinthWalker, LabyrinthSchema
 
-c = sqlite3.connect("../database.sqlite")
+DB_PATH = configmanager.get_db_path()
+c = sqlite3.connect(DB_PATH)
 
 
 def int_to_obj(a):

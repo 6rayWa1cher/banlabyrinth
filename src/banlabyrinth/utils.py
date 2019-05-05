@@ -16,9 +16,9 @@ async def trap(member, guild, exclude):
                 if special_perms.read_messages is not None or special_perms.connect is not None:
                     previous_member_roles[channel] = (special_perms.read_messages, special_perms.connect)
             await channel.set_permissions(member, read_messages=False, connect=False)
-            logger.debug(
-                "changing {0.name}'s from guild {1.id} roles in channel {2.name} to {3}".format(member, guild,
-                                                                                                channel, "False"))
+            logger.debug("changing {0.name} from guild {1.id} roles in channel {2.name} "
+                         "to read_messages={3}, connect={4}".format(member, guild, channel, "False",
+                                                                    "False"))
         except discord.errors.Forbidden:
             pass
     return previous_member_roles
