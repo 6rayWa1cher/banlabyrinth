@@ -95,9 +95,9 @@ class TrappedCog(commands.Cog):
         Removes the labyrinth and restores member permissions.
         Requires "Labyrinth Keeper" role to be executed.
         Examples:
-        #unbox "Bad guy"
-        #unbox Bad guy
-        #unbox BadGuy
+        #pardon "Bad guy"
+        #pardon Bad guy
+        #pardon BadGuy
         """
         await self._pardon(member, ctx.guild)
         logger.info("pardoned {0.name} from guild {1.id}".format(member, ctx.guild))
