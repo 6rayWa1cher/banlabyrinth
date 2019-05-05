@@ -2,7 +2,7 @@
 This discord bot supplies your server with new temporary ban strategy. Annoying people could be trapped inside the 
 labyrinth or box. A labyrinth visually is a voice channel category with 5 channels in it. After going through the maze 
 the user will be restored to their rights.
-
+##### Instead of boring temporary ban, you can lock up that bad guy >:) 
 ![](https://i.imgur.com/1adSSjG.gif)
 # Commands
 All commands require "Labyrinth Keeper" role to be executed. If that role not created, execute any command once.
