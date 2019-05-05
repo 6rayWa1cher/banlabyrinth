@@ -1,9 +1,10 @@
 # banlabyrinth
-This bot supplies your server with new temporary ban strategy. Annoying people could be trapped inside the labyrinth or box.
-A labyrinth is a voice channel category with 5 channels in it. 
+This discord bot supplies your server with new temporary ban strategy. Annoying people could be trapped inside the 
+labyrinth or box. A labyrinth visually is a voice channel category with 5 channels in it. After going through the maze 
+the user will be restored to their rights.
 # Commands
 All commands require "Labyrinth Keeper" role to be executed. If that role not created, execute any command once.
-* `#trap [member] [size]` - Creates a labyrinth for the member and locks him in it. Size format: NxM , where 0 < n < 100, 0 < m < 100.
+* `#trap [member] [size]` - Creates a labyrinth for the member and locks him in it. Size format: NxM , where 0 < n < 100, 0 < m < 100.  
   Examples: #trap "Bad guy" 20x15 , #trap BadGuy
 * `#pardon [member]` Removes the labyrinth and restores member permissions.
 * `#box [member]` Creates a box for the member and locks him in it.
@@ -13,9 +14,11 @@ All commands require "Labyrinth Keeper" role to be executed. If that role not cr
     ```
     # Windows
     $ python
+    >>> exit()
     
     # MacOS, Linux
     $ python3
+    >>> exit()
     ```
 2) Install "virtualenv" package. It will help later with creating a dedicated environment for banlabyrinth.
     ```
@@ -59,20 +62,19 @@ All commands require "Labyrinth Keeper" role to be executed. If that role not cr
     # MacOS, Linux
     $ python3 -m banlabyrinth
     ```
-    It will fail with ValueError path to your config.ini file
+    It will fail with `ValueError: Discord token not provided in "PATH TO config.ini" !`
 7) Go to https://discordapp.com/developers/applications/ and register new bot. 
-    Then, copy bot token to DEFAULT -> token. (replace fill_me)
+    Then, copy bot token to `token` (replace `fill_me`) in `config.ini` (see previous step).
 8) You're ready to finally run the bot! Execute this each time you wanted to start the bot:
     ```
     # Windows
     $ cd /D "YOUR PATH"
-    $ venv\Scripts\activate.bat
-    $ python -m banlabyrinth
+    $ venv\Scripts\python.exe -m banlabyrinth
     
     # MacOS, Linux
     $ cd YOUR PATH
-    $ source venv/bin/activate
-    $ python3 -m banlabyrinth
+    $ venv/bin/python3 -m banlabyrinth
     ```
+9) To stop bot, use Ctrl+Break on Windows or Ctrl+C on MacOS/Linux
 # Contributing
 You're always welcome with ideas, issues, and other help! 

@@ -6,7 +6,7 @@ setup(
     packages=find_namespace_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
-        'discord==1.0.1',
+        'discord.py==1.0.1',
         'appdirs==1.2.0'
     ],
     url='https://github.com/6rayWa1cher/banlabyrinth',
