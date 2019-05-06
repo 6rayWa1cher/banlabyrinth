@@ -1,6 +1,7 @@
 import sqlite3
 
 import discord.ext.commands
+from discord import Permissions
 from discord.utils import find
 
 from banlabyrinth import configmanager
@@ -10,15 +11,6 @@ from banlabyrinth.lab import LabyrinthWalker, LabyrinthSchema
 
 DB_PATH = configmanager.get_db_path()
 c = sqlite3.connect(DB_PATH)
-
-
-def int_to_obj(a):
-    return None if a == -1 else bool(a)
-
-
-def obj_to_int(a):
-    return -1 if a is None else int(a)
-
 
 def setup():
     with c:
@@ -39,8 +31,8 @@ def setup():
         CREATE TABLE IF NOT EXISTS member_roles (
             folder_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
-            read_messages INTEGER,
-            connect INTEGER,
+            allow INTEGER,
+            deny INTEGER,
             FOREIGN KEY (folder_id) REFERENCES labyrinth (folder_id) ON DELETE CASCADE,
             PRIMARY KEY (folder_id, channel_id)
         )
@@ -49,8 +41,8 @@ def setup():
         CREATE TABLE IF NOT EXISTS box_member_roles (
             box_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
-            read_messages INTEGER,
-            connect INTEGER,
+            allow INTEGER,
+            deny INTEGER,
             PRIMARY KEY (box_id, channel_id)
         )
         ''')
@@ -60,8 +52,8 @@ def setup():
 def push_box_member_roles(box_id, member_roles: dict):
     with c:
         c.executemany('''
-        INSERT INTO box_member_roles (box_id, channel_id, read_messages, connect) VALUES (?,?,?,?)
-        ''', ((box_id, i.id, obj_to_int(member_roles[i][0]), obj_to_int(member_roles[i][1])) for i in
+        INSERT INTO box_member_roles (box_id, channel_id, allow, deny) VALUES (?,?,?,?)
+        ''', ((box_id, i.id, member_roles[i][0].value, member_roles[i][1].value) for i in
               member_roles.keys()))
         c.commit()
 
@@ -74,8 +66,8 @@ def push_lab_to_db(lab: Labyrinth):
               repr(lab.lab)))
         member_roles = lab.previous_member_roles
         c.executemany('''
-        INSERT INTO member_roles (folder_id, channel_id, read_messages, connect) VALUES (?,?,?,?)
-        ''', ((lab.folder.id, i.id, obj_to_int(member_roles[i][0]), obj_to_int(member_roles[i][1])) for i in
+        INSERT INTO member_roles (folder_id, channel_id, allow, deny) VALUES (?,?,?,?)
+        ''', ((lab.folder.id, i.id, member_roles[i][0].value, member_roles[i][1].value) for i in
               member_roles.keys()))
         c.commit()
 
@@ -111,10 +103,10 @@ def get_member_roles(guild: discord.Guild, folder_id: int) -> dict:
         ''', (folder_id,))
         previous_member_roles = dict()
         for row in cursor.fetchall():
-            folder_id, channel_id, read_messages_int, connect_int = row
+            folder_id, channel_id, allow_int, deny_int = row
             channel = guild.get_channel(channel_id)
             if channel is not None:
-                previous_member_roles[channel] = (int_to_obj(read_messages_int), int_to_obj(connect_int))
+                previous_member_roles[channel] = (Permissions(allow_int), Permissions(deny_int))
         return previous_member_roles
 
 
@@ -125,10 +117,10 @@ def get_box_member_roles(guild: discord.Guild, box_id: int) -> dict:
         ''', (box_id,))
         previous_member_roles = dict()
         for row in cursor.fetchall():
-            folder_id, channel_id, read_messages_int, connect_int = row
+            folder_id, channel_id, allow_int, deny_int = row
             channel = guild.get_channel(channel_id)
             if channel is not None:
-                previous_member_roles[channel] = (int_to_obj(read_messages_int), int_to_obj(connect_int))
+                previous_member_roles[channel] = (Permissions(allow_int), Permissions(deny_int))
         return previous_member_roles
 
 
