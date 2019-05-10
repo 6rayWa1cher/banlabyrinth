@@ -39,6 +39,7 @@ def main():
     token = configmanager.get_token()
     bot = commands.Bot(command_prefix=configmanager.get_command_prefix())
     bot.load_extension("banlabyrinth.cogs.roleregistrarcog")
+    bot.load_extension("banlabyrinth.cogs.databasecleanercog")
     bot.load_extension("banlabyrinth.cogs.boxcog")
     bot.load_extension("banlabyrinth.cogs.trappedcog")
     logging.getLogger('banlab').info("Connecting...")

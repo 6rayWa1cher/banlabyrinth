@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List
 
 import discord.ext.commands
 from discord import Permissions
@@ -11,6 +12,7 @@ from banlabyrinth.lab import LabyrinthWalker, LabyrinthSchema
 
 DB_PATH = configmanager.get_db_path()
 c = sqlite3.connect(DB_PATH)
+
 
 def setup():
     with c:
@@ -93,6 +95,17 @@ def delete_box_member_roles(box_id: int):
         c.execute('''
         DELETE FROM box_member_roles WHERE box_id = ?
         ''', (box_id,))
+        c.commit()
+
+
+def delete_labs_of_guild(guild_id: int, box_ids: List[int]):
+    with c:
+        c.execute('''
+        DELETE FROM labyrinth WHERE guild_id = ?
+        ''', (guild_id,))
+        c.executemany('''
+        DELETE FROM box_member_roles WHERE box_id = ?
+        ''', ((i,) for i in box_ids))
         c.commit()
 
 
