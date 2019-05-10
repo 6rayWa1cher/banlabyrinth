@@ -134,6 +134,9 @@ def collect_data_from_db(bot: discord.ext.commands.Bot) -> dict:
             folder_id, guild_id, up_channel_id, right_channel_id, down_channel_id, \
             left_channel_id, center_channel_id, lab_data = row
             guild = bot.get_guild(guild_id)
+            if guild is None:
+                delete_lab_from_db(folder_id)
+                continue
             channels = list()
             flag = False
             for ch_id in [up_channel_id, right_channel_id, down_channel_id, left_channel_id, center_channel_id]:
