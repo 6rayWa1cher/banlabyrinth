@@ -1,7 +1,8 @@
 # banlabyrinth
 This discord bot supplies your server with new temporary ban strategy. Annoying people could be trapped inside the 
 labyrinth or box. A labyrinth visually is a voice channel category with 5 channels in it. After going through the maze 
-the user will be restored to their rights.
+the user will be restored to their rights.  
+Direct link to invite bot: https://discordapp.com/api/oauth2/authorize?client_id=568422729166880778&permissions=286264336&scope=bot
 ##### Instead of boring temporary ban, you can lock up that bad guy >:) 
 ![](https://i.imgur.com/1adSSjG.gif)
 # Commands
@@ -12,7 +13,8 @@ All commands require "Labyrinth Keeper" role to be executed. If that role not cr
 * `#pardon [member]` Removes the labyrinth and restores member permissions.
 * `#box [member]` Creates a box for the member and locks him in it.
 * `#unbox [member]` Removes the box and restores member permissions.
-# Setup
+* `#help [command]` Info about the command or just a list of commands, if `[commands]` is not provided.
+# Installation
 1) Check if Python installed on your machine. Otherwise, visit https://www.python.org/
     ```
     # Windows
@@ -45,8 +47,12 @@ All commands require "Labyrinth Keeper" role to be executed. If that role not cr
     $ virtualenv venv
     $ venv\Scripts\activate.bat
     
-    # MacOS, Linux
+    # MacOS
     $ virtualenv venv
+    $ source venv/bin/activate
+    
+    # Linux
+    $ python3 -m virtualenv venv
     $ source venv/bin/activate
     ```
 5) Install banlabyrinth
