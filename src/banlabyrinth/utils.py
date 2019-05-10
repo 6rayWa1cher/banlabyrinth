@@ -1,5 +1,7 @@
 import logging
+import random
 from itertools import filterfalse
+from typing import Optional
 
 import discord
 from discord import PermissionOverwrite
@@ -7,8 +9,29 @@ from discord import PermissionOverwrite
 logger = logging.getLogger("banlab")
 
 
+def get_justice_quote() -> str:
+    quotes = ["Be nice and kind!", "Remember: my boxes and mazes are always ready! >:)",
+              "I think, you don't want to meet me again :)", "You got off easy, don't you think?",
+              "For your safety, do not do anything wrong!", "See you next time >:D"]
+    return random.choice(quotes)
+
+
+async def get_member(ctx, member) -> Optional[discord.Member]:
+    if member is not None and ctx.guild.get_member_named(member) is not None:
+        member = ctx.guild.get_member_named(member)
+    elif member is not None:
+        await ctx.send("{0} not found.".format(member))
+        return None
+    else:
+        member = ctx.author
+    if member == ctx.guild.me:
+        await ctx.send("Nope :P You can't do this on me :D".format(member))
+        return None
+    return member
+
+
 # noinspection PyUnresolvedReferences
-async def trap(member, guild, exclude):
+async def trap(ctx, member, guild, exclude):
     previous_member_roles = dict()
     for channel in filterfalse(exclude.__contains__, guild.voice_channels):
         try:
@@ -21,7 +44,10 @@ async def trap(member, guild, exclude):
                          "to read_messages={3}, connect={4}".format(member, guild, channel, "False",
                                                                     "False"))
         except discord.errors.Forbidden:
-            pass
+            await ctx.send("Warning! Something went wrong while trapping process! "
+                           "Check if I have enough rights in {0.name}, especially "
+                           "right to change permissions. Otherwise, the trap isn't"
+                           " effective :(".format(channel))
     return previous_member_roles
 
 

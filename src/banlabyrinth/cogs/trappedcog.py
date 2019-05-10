@@ -5,12 +5,13 @@ import discord
 from discord.ext import commands
 from discord.utils import find
 
+import banlabyrinth
 from banlabyrinth import dbmanager
 from banlabyrinth.cogs import roleregistrarcog
 from banlabyrinth.cogs.roleregistrarcog import is_role_powered
 from banlabyrinth.entities.labyrinth import Labyrinth, UP_ARROW, DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, CENTER_ICON
 from banlabyrinth.lab import LabyrinthWalker, gen_lab
-from banlabyrinth.utils import trap, untrap
+from banlabyrinth.utils import trap, untrap, get_justice_quote
 
 logger = logging.getLogger("banlab")
 
@@ -34,13 +35,13 @@ class TrappedCog(commands.Cog):
 
     @commands.command()
     @commands.check(is_role_powered)
-    async def trap(self, ctx, member: discord.Member = None, size: str = "15x15"):
+    async def trap(self, ctx, member=None, size: str = "15x15"):
         """
         Creates a labyrinth for the member and locks him in it.
         If member not provided, the effect will be on you!
         Requires "Labyrinth Keeper" role to be executed.
         By default creates labyrinth 15x15 (thin walls). You can set another size (not square, for example):
-        limits only 0 and 100 (both not inclusive) for both size.
+        limits only 1 and 100 (both not inclusive) for both size.
         Examples:
         #trap "Bad guy"
         #trap "Bad guy" 20x15
@@ -48,14 +49,16 @@ class TrappedCog(commands.Cog):
         #trap BadGuy 25x50
         #trap BadGuy#1337
         """
-        member = member or ctx.author
-        if member == ctx.guild.me:
+        member = await banlabyrinth.utils.get_member(ctx, member)
+        if member is None:
             return
         guild = ctx.guild
         if not self._size_re.fullmatch(size):
+            await ctx.send("Incorrect sizes. NxM : 1 < N < 100 and 1 < M < 100")
             return
         lab_width, lab_height = map(int, size.split("x"))
-        if lab_width < 0 or lab_height < 0:
+        if lab_width <= 1 or lab_height <= 1:
+            await ctx.send("Incorrect sizes. NxM : 1 < N < 100 and 1 < M < 100")
             return
         role = roleregistrarcog.get_role(self.bot, guild)
         overwrites = {
@@ -80,17 +83,17 @@ class TrappedCog(commands.Cog):
                 await member.move_to(center)
             except discord.errors.HTTPException:
                 pass
-            previous_member_roles = await trap(member, guild, lab.channels)
+            previous_member_roles = await trap(ctx, member, guild, lab.channels)
             lab.previous_member_roles = previous_member_roles
             await lab.update_channels()
             self.channel_to_lab.update({i: lab for i in lab.channels})
             dbmanager.push_lab_to_db(lab)
-        await ctx.send("{0.display_name} has been thrown into labyrinth >:)".format(member))
+            await ctx.send("{0.display_name} has been thrown into labyrinth >:)".format(member))
         logger.info("trapped {0.name} from guild {1.id} into labyrinth".format(member, guild))
 
     @commands.command()
     @commands.check(is_role_powered)
-    async def pardon(self, ctx, *, member: discord.Member):
+    async def pardon(self, ctx, *, member=None):
         """
         Removes the labyrinth and restores member permissions.
         Requires "Labyrinth Keeper" role to be executed.
@@ -99,7 +102,11 @@ class TrappedCog(commands.Cog):
         #pardon Bad guy
         #pardon BadGuy
         """
+        member = await banlabyrinth.utils.get_member(ctx, member)
+        if member is None:
+            return
         await self._pardon(member, ctx.guild)
+        await ctx.send("Pardoned {0.display_name}. {1}".format(member, get_justice_quote()))
         logger.info("pardoned {0.name} from guild {1.id}".format(member, ctx.guild))
 
     async def _pardon(self, member: discord.Member, guild):
@@ -134,6 +141,10 @@ class TrappedCog(commands.Cog):
             lab = self.channel_to_lab[after]
         if after not in self.channel_to_lab:
             await self._pardon(member, guild)
+            if guild.system_channel is not None:
+                await guild.system_channel.send(
+                    r"Pardoned {0.display_name}, because he's run away (or someone helped him). ¯\_(ツ)_/¯".format(
+                        member))
             return
         if after == lab.center:
             return
@@ -148,6 +159,9 @@ class TrappedCog(commands.Cog):
             "lab for {0.name} from guild {1.id}: {2} -> {3}".format(member, guild, pos_before, pos_after))
         if lab.lab.is_win():
             await self._pardon(member, guild)
+            if guild.system_channel is not None:
+                await guild.system_channel.send(
+                    "{0.display_name} completed my maze! {1}".format(member, get_justice_quote()))
         else:
             await member.move_to(lab.center)
             await lab.update_channels()

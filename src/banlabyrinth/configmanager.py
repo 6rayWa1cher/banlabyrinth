@@ -19,6 +19,7 @@ def update_config(config):
 def create_config():
     config = configparser.ConfigParser()
     config["DEFAULT"]["token"] = "fill_me"
+    config["DEFAULT"]["command-prefix"] = "#"
     config.add_section("paths")
     config["paths"]["logs"] = user_log_dir(appname, appauthor) + os.sep
     config["paths"]["database"] = user_data_dir(appname, appauthor) + os.sep + "database.sqlite"
@@ -63,3 +64,12 @@ def get_db_path():
     return _get_path("paths", "database",
                      user_data_dir(appname, appauthor) + os.sep + "database.sqlite",
                      False)
+
+
+def get_command_prefix():
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+    if "command-prefix" not in config["DEFAULT"] or len(config["DEFAULT"]["command-prefix"]) != 1:
+        config["DEFAULT"]["command-prefix"] = '#'
+        update_config(config)
+    return config["DEFAULT"]["command-prefix"]

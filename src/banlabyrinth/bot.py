@@ -37,7 +37,7 @@ def main():
     import banlabyrinth.dbmanager as dbmanager
     dbmanager.setup()
     token = configmanager.get_token()
-    bot = commands.Bot(command_prefix='#')
+    bot = commands.Bot(command_prefix=configmanager.get_command_prefix())
     bot.load_extension("banlabyrinth.cogs.roleregistrarcog")
     bot.load_extension("banlabyrinth.cogs.boxcog")
     bot.load_extension("banlabyrinth.cogs.trappedcog")

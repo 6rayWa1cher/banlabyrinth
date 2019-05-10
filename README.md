@@ -6,7 +6,8 @@ the user will be restored to their rights.
 ![](https://i.imgur.com/1adSSjG.gif)
 # Commands
 All commands require "Labyrinth Keeper" role to be executed. If that role not created, execute any command once.
-* `#trap [member] [size]` - Creates a labyrinth for the member and locks him in it. Size format: NxM , where 0 < n < 100, 0 < m < 100.  
+* `#trap [member] [size]` - Creates a labyrinth for the member and locks him in it. Size format: NxM , where 
+1 < n < 100, 1 < m < 100.  
   Examples: #trap "Bad guy" 20x15 , #trap BadGuy
 * `#pardon [member]` Removes the labyrinth and restores member permissions.
 * `#box [member]` Creates a box for the member and locks him in it.
